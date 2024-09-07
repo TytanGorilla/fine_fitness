@@ -1,4 +1,4 @@
-# YOUR PROJECT TITLE
+# Fine Fitness
 #### Video Demo:  <URL HERE>
 #### Description:
 TODO
