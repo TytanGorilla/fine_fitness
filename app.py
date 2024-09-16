@@ -1,4 +1,8 @@
-def hello():
-    print("Hey new project!!")
+from flask import Flask, render_template, request, session
 
-hello()
+app = Flask(__name__)
+
+@app.route("/", methods=["GET"])
+def index():
+    #return render_template("index.html")
+    return "TYTANNNN"
