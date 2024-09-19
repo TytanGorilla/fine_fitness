@@ -22,6 +22,7 @@ class User(db.Model):
 # Create the database and tables if they don't exist
 def create_db():
     with app.app_context():
+        print("Creating database and tables...")
         db.create_all()
 
 @app.route("/", methods=["GET"])
