@@ -31,5 +31,6 @@ def index():
     #return "TYTANNNN"
 
 if __name__ == '__main__':
+    print("Creating database and tables if they don't exist...")
     create_db()  # Initialize the database
     app.run(debug=True)  # Start the Flask application

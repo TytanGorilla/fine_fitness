@@ -23,5 +23,6 @@ EXPOSE 4000
 # Define environment variable for Flask
 ENV FLASK_APP=app.py
 
-# Run the Flask app
-CMD ["flask", "run", "--host=0.0.0.0", "--port=4000"]
+# Run the Flask app & initialize the database
+CMD ["sh", "-c", "python -c 'from app import create_db; create_db()' && flask run --host=0.0.0.0 --port=4000"]
+
