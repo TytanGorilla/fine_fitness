@@ -25,4 +25,3 @@ ENV FLASK_APP=app.py
 
 # Run the Flask app & initialize the database
 CMD ["sh", "-c", "python -c 'from app import create_db; create_db()' && flask run --host=0.0.0.0 --port=4000"]
-
