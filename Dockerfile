@@ -7,6 +7,9 @@ ENV PYTHONUNBUFFERED=1
 # Install system dependencies for SQLite
 RUN apt-get update && apt-get install -y sqlite3 libsqlite3-dev
 
+# Install CS50 SQL functionality for single line queries.
+RUN pip3 install cs50
+
 # Install any needed packages specified in requirements.txt
 COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
