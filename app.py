@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from cs50 import SQL
 from functools import wraps # Comes with python so no need to install via requirements.txt
 from werkzeug.security import check_password_hash, generate_password_hash
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -22,8 +23,43 @@ class User(db.Model):
     __tablename__ = 'users'  # Define the table name
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Auto-incrementing primary key
-    username = db.Column(db.String, nullable=False, unique=True)  # Username column
+    user_name = db.Column(db.String, nullable=False, unique=True)  # Username column
     hash = db.Column(db.String, nullable=False)  # Hash column for passwords
+
+class Exercise(db.Model):
+    __tablename__ = 'exercises'  # Define the table name
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Auto-incrementing primary key
+    exercise_name = db.Column(db.String, nullable=False, unique=True)  # Exercise_name column
+    description = db.Column(db.String) 
+
+class Log(db.Model):
+    __tablename__ = 'logs'  # Define the table name
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Auto-incrementing primary key
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # User ID column
+    exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.id'), nullable=False)  # Exercise ID column
+    program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=True)  # Program ID column
+    load = db.Column(db.Integer, nullable=False)  # Load column
+    sets = db.Column(db.Integer, nullable=False)  # Sets column
+    reps = db.Column(db.Integer, nullable=False)  # Reps column
+    rir = db.Column(db.Integer, nullable=False)  # RIR column
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)  # Use current timestamp
+
+
+    # Relationships (not mandatory but useful for easier access)
+    user = db.relationship('User', backref=db.backref('logs', lazy=True))
+    exercise = db.relationship('Exercise', backref=db.backref('logs', lazy=True))
+
+class Program(db.Model):
+    __tablename__ = 'programs'  # Define the table name
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Auto-incrementing primary key
+    name = db.Column(db.String, nullable=False)
+
+    # Relationships to logs (one program can have many logs)
+    logs = db.relationship('Log', backref='program', lazy=True)
+
 
 # Create the database and tables if they don't exist
 def create_db():
