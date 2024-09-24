@@ -106,7 +106,7 @@ def register():
         # Username present, check for database duplicates
         #match = db.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
         username = request.form.get("username")
-        match = User.query.filter_by(username=username).first()
+        match = User.query.filter_by(user_name=username).first()
 
         if match != None:  # There is a username duplicate in the database
             return "BAD APE! That username already exists."
@@ -125,7 +125,7 @@ def register():
             # Hash password
             hashed_pass = generate_password_hash(pass_1, method='pbkdf2', salt_length=16)
             #db.execute("INSERT INTO users(username, hash) VALUES(?, ?)", request.form.get("username"), hashed_pass)
-            new_user = User(username=request.form.get("username"), hash=hashed_pass)
+            new_user = User(user_name=request.form.get("username"), hash=hashed_pass)
             db.session.add(new_user)
             db.session.commit()
 
@@ -134,7 +134,7 @@ def register():
 
         # Query database for username
         #rows = db.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
-        user = User.query.filter(User.username == request.form.get("username")).first()
+        user = User.query.filter(User.user_name == request.form.get("username")).first()
 
         # Log user in
         if user: # and not None
@@ -164,7 +164,7 @@ def login():
 
         # Query database for username
         #rows = db.execute("SELECT * FROM users WHERE username = ?", request.form.get("username"))
-        user = User.query.filter_by(username=request.form.get("username")).first()
+        user = User.query.filter_by(user_name=request.form.get("username")).first()
 
         # Ensure username exists and password is correct
         if user is None or not check_password_hash(user.hash, request.form.get("password")):
