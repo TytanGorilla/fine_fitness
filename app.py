@@ -83,7 +83,7 @@ def login_required(f):
     return decorated_function
 
 
-@app.route("/", methods=["GET"])
+@app.route("/", methods=["GET"]) 
 def index():
     return render_template("index.html")
     #return "TYTANNNN"
@@ -191,6 +191,24 @@ def logout():
 
     # Redirect user to login form
     return redirect("/")
+
+
+@app.route("/create", methods=["GET", "POST"])
+@login_required
+def create():
+    return render_template("create.html")
+
+
+@app.route("/display", methods=["GET", "POST"])
+@login_required
+def display():
+    return render_template("display.html")
+
+
+@app.route("/design", methods=["GET", "POST"])
+@login_required
+def design():
+    return render_template("design.html")
 
 
 if __name__ == '__main__':

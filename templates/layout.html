@@ -29,16 +29,17 @@
         <div class="container-fluid">
             {% if session["user_id"] %}
             <ul>
-                <li class="nav-item"><a class="nav-link" href="/index">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="/index">Train</a></li>
-                <li class="nav-item"><a class="nav-link" href="/index">Program Design</a></li>
-                <li class="nav-item"><a class="nav-link" href="/index">Training Logs</a></li>
+                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="/create">Train</a></li>
+                <li class="nav-item"><a class="nav-link" href="/design">Program Design</a></li>
+                <li class="nav-item"><a class="nav-link" href="/display">Training Logs</a></li>
             </ul>
             <ul class="navbar-nav ms-auto mt-2">
                 <li class="nav-item"><a class="nav-link" href="/logout">Log Out</a></li>
             </ul>
             {% else %}
             <ul>
+                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
                 <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
                 <li class="nav-item"><a class="nav-link" href="/login">Log In</a></li>
             </ul>

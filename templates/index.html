@@ -6,14 +6,27 @@ Index
 
 {% block main %}
 <div>
-    <h1>Welcome to TYTAN's Fine Fitness for WARRRRR!!!!</h1>
+    <h1>Welcome to TYTAN's Fine Fitness Application</h1>
     <p>An intuitive exercise logger for planning and deploying training blocks.</p>
     <div class="container text-center">
         <h2>Features</h2>
         <div class="row">
-            <div class="col">Easily create complex training blocks.</div>
-            <div class="col">Database programs & logged performance.</div>
-            <div class="col">Perform queries & display training data.</div>
+            <div class="container text-center">
+                <div class="row">
+                    <div class="col">
+                        <p>Create Training sessions.</p>
+                        <a href="/create" class="btn btn-secondary">Create</a>
+                    </div>
+                    <div class="col">
+                        <p>Graph volumes, reps achieved & exercise stats.</p>
+                        <a href="/display" class="btn btn-secondary">Display</a>
+                    </div>
+                    <div class="col">
+                        <p>Design meso-cycles & blocks.</p>
+                        <a href="/design" class="btn btn-secondary">Design</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
