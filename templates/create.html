@@ -5,19 +5,51 @@ Create
 {% endblock %}
 
 {% block main %}
-<div>
+<div class="back-container">
     <h1>Create</h1>
     <p>Select an option</p>
-    <div class="container text-center">
+    <div class="container text-center custom-container">
         <h2>Features</h2>
         <div class="row">
             <div class="col">Create training...</div>
             <div class="container text-center">
-                <a href="" class="btn btn-secondary">Session</a>
+                <button type="button" onclick="showForm()" class="btn btn-secondary">Session</button>
                 <a href="/design" class="btn btn-secondary">Program</a>
                 <a href="/design" class="btn btn-secondary">Block</a>
             </div>
         </div>
     </div>
+    <!-- Form that is initially hidden -->
+    <form id="exerciseForm">
+        <table id="exerciseTable">
+            <thead>
+                <tr>
+                    <th>Exercise Name</th>
+                    <th>Load (kg)</th>
+                    <th>Sets</th>
+                    <th>Reps</th>
+                    <th>RIR</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" name="exercise_name[]" placeholder="Exercise"></td>
+                    <td><input type="number" name="load[]" placeholder="Load (kg)"></td>
+                    <td><input type="number" name="sets[]" placeholder="Sets" oninput="updateRepsFields(this)"></td>
+                    <td id="reps-cell">
+                        <!-- Reps input fields will be inserted here dynamically -->
+                    </td>
+                    <td><input type="number" name="rir[]" placeholder="RIR"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <button type="button" onclick="addExerciseRow()">Add Exercise</button>
+        <button type="submit">Submit</button>
+    </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/form.js') }}"></script>
 {% endblock %}

@@ -1,0 +1,17 @@
+.custom-container {
+    background-color: lightgrey;
+    /* Light grey background */
+    border-radius: 5px;
+    /* Rounded corners of 5px */
+    padding: 20px;
+    /* Adds padding inside the div */
+}
+
+.back-container {
+    background-color: rgb(226, 243, 240);
+    /* Light grey background */
+    border-radius: 5px;
+    /* Rounded corners of 5px */
+    padding: 20px;
+    /* Adds padding inside the div */
+}
