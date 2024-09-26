@@ -13,11 +13,11 @@ function addExerciseRow() {
 
     // Insert cells and inputs for the new row
     newRow.innerHTML = `
-        <tr>
+        <tr class="exercise-row">
             <td><input type="text" name="exercise_name[]" placeholder="Exercise"></td>
             <td><input type="number" name="load[]" placeholder="Load (kg)"></td>
             <td><input type="number" name="sets[]" placeholder="Sets" oninput="updateRepsFields(this)"></td>
-            <td id="reps-cell">
+            <td class="reps-cell">
                 <!-- Reps input fields will be inserted here dynamically -->
             </td>
             <td><input type="number" name="rir[]" placeholder="RIR"></td>
@@ -33,24 +33,16 @@ window.onload = function () {
 
 // Function to dynamically create reps fields based on the number of sets
 function updateRepsFields(setsInput) {
-    // Get the value of sets input (number of sets)
-    const sets = parseInt(setsInput.value);
+    const sets = setsInput.value;
+    const repsCell = setsInput.closest('tr').querySelector('.reps-cell');
+    repsCell.innerHTML = ''; // Clear existing reps inputs
 
-    // Get the cell where reps inputs will be placed
-    const repsCell = setsInput.parentElement.nextElementSibling;
-
-    // Clear any existing reps fields
-    repsCell.innerHTML = '';
-
-    // If the input is a valid number, create reps fields
-    if (!isNaN(sets) && sets > 0) {
-        for (let i = 1; i <= sets; i++) {
-            const repsInput = document.createElement('input');
-            repsInput.type = 'number';
-            repsInput.name = 'reps[]';
-            repsInput.placeholder = `Reps for Set ${i}`;
-            repsInput.style.marginRight = '5px';
-            repsCell.appendChild(repsInput);
-        }
+    for (let i = 0; i < sets; i++) {
+        const repsInput = document.createElement('input');
+        repsInput.type = 'number';
+        repsInput.name = `reps[${setsInput.closest('tr').rowIndex}][${i}]`; // Use array-like notation
+        repsInput.placeholder = `Reps for Set ${i + 1}`;
+        repsInput.classList.add('reps-input'); // Add styling class if needed
+        repsCell.appendChild(repsInput);
     }
 }

@@ -210,6 +210,44 @@ def display():
 def design():
     return render_template("design.html")
 
+@app.route('/submit-log', methods=['POST'])
+def submit_log():
+    # Get data from the form
+    user_id = request.form.get('user_id')  # Ensure user_id is present
+    exercise_names = request.form.getlist('exercise_name[]')  # List of exercise names
+    loads = request.form.getlist('load[]')  # List of loads
+    sets = request.form.getlist('sets[]')  # List of sets
+    rirs = request.form.getlist('rir[]')  # List of RIRs
+
+    # Capture dynamic reps and concatenate them into a single string for each exercise
+    all_reps = []
+    for i in range(len(sets)):
+        set_reps = request.form.getlist(f'reps[{i}][]')  # Retrieve all reps for the i-th exercise
+        # Join the reps into a single string, separated by commas (or any other delimiter)
+        concatenated_reps = ', '.join(set_reps)  # Adjust the delimiter as needed
+        all_reps.append(concatenated_reps)
+
+    # Process the data and save it to your database
+    for i in range(len(exercise_names)):
+        # Convert values to appropriate types if necessary
+        load_value = int(loads[i]) if loads[i] else 0
+        sets_value = int(sets[i]) if sets[i] else 0
+        rir_value = int(rirs[i]) if rirs[i] else 0
+        
+        log = Log(
+            user_id=user_id,
+            exercise_name=exercise_names[i],
+            load=load_value,
+            sets=sets_value,
+            reps=all_reps[i],  # Store the concatenated reps string
+            rir=rir_value,
+            timestamp=datetime.utcnow()
+        )
+        db.session.add(log)
+
+    db.session.commit()
+    
+
 
 if __name__ == '__main__':
     print("Creating database and tables if they don't exist...")

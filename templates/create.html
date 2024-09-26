@@ -20,7 +20,8 @@ Create
         </div>
     </div>
     <!-- Form that is initially hidden -->
-    <form id="exerciseForm">
+    <form id="exerciseForm" action="{{ url_for('submit_log') }}" method="POST">
+        <input type="hidden" name="user_id" value="{{ user_id }}">
         <table id="exerciseTable">
             <thead>
                 <tr>
@@ -32,11 +33,11 @@ Create
                 </tr>
             </thead>
             <tbody>
-                <tr>
+                <tr class="exercise-row">
                     <td><input type="text" name="exercise_name[]" placeholder="Exercise"></td>
                     <td><input type="number" name="load[]" placeholder="Load (kg)"></td>
                     <td><input type="number" name="sets[]" placeholder="Sets" oninput="updateRepsFields(this)"></td>
-                    <td id="reps-cell">
+                    <td class="reps-cell">
                         <!-- Reps input fields will be inserted here dynamically -->
                     </td>
                     <td><input type="number" name="rir[]" placeholder="RIR"></td>
