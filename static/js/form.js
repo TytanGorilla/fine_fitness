@@ -2,6 +2,9 @@
 function showForm() {
     const exerciseForm = document.getElementById("exerciseForm");
     exerciseForm.style.display = "block";  // Shows the form
+
+    // Hide the button container
+    document.getElementById('buttonContainer').style.display = 'none';
 }
 
 // Function to dynamically add a new exercise row
@@ -11,17 +14,18 @@ function addExerciseRow() {
     // Create a new row
     const newRow = table.insertRow();
 
+    // Add the "exercise-row" class to the new row
+    newRow.classList.add("exercise-row");
+
     // Insert cells and inputs for the new row
     newRow.innerHTML = `
-        <tr class="exercise-row">
-            <td><input type="text" name="exercise_name[]" placeholder="Exercise"></td>
-            <td><input type="number" name="load[]" placeholder="Load (kg)"></td>
-            <td><input type="number" name="sets[]" placeholder="Sets" oninput="updateRepsFields(this)"></td>
-            <td class="reps-cell">
-                <!-- Reps input fields will be inserted here dynamically -->
-            </td>
-            <td><input type="number" name="rir[]" placeholder="RIR"></td>
-        </tr>
+        <td><input type="text" name="exercise_name[]" placeholder="Exercise" class="form-control"></td>
+        <td><input type="number" name="load[]" placeholder="Load (kg)" class="form-control"></td>
+        <td><input type="number" name="sets[]" placeholder="Sets" oninput="updateRepsFields(this)" class="form-control"></td>
+        <td class="reps-cell">
+            <!-- Reps input fields will be inserted here dynamically -->
+        </td>
+        <td><input type="number" name="rir[]" placeholder="RIR" class="form-control"></td>
     `;
 }
 
@@ -41,8 +45,20 @@ function updateRepsFields(setsInput) {
         const repsInput = document.createElement('input');
         repsInput.type = 'number';
         repsInput.name = `reps[${setsInput.closest('tr').rowIndex}][${i}]`; // Use array-like notation
-        repsInput.placeholder = `Reps for Set ${i + 1}`;
+        repsInput.placeholder = `Reps Set ${i + 1}`;
         repsInput.classList.add('reps-input'); // Add styling class if needed
+        repsInput.classList.add('form-control')
         repsCell.appendChild(repsInput);
     }
 }
+
+// JavaScript to manage active state
+document.querySelectorAll('.nav-link').forEach(link => {
+    link.addEventListener('click', function () {
+        // Remove 'active' class from all links
+        document.querySelectorAll('.nav-link').forEach(nav => nav.classList.remove('active'));
+
+        // Add 'active' class to the clicked link
+        this.classList.add('active');
+    });
+});

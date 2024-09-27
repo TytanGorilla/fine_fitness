@@ -1,25 +1,52 @@
-.custom-container {
-    background-color: lightgrey;
-    /* Light grey background */
-    border-radius: 5px;
-    /* Rounded corners of 5px */
-    padding: 20px;
-    /* Adds padding inside the div */
+html {
+    font-size: 2vw;
+    /* Set the base font size according to the viewport width */
 }
+
+body {
+    font-size: 1rem;
+    /* Use rem for all text sizes */
+    line-height: 1.5;
+    /* Ensure good readability */
+}
+
+h1 {
+    font-size: 2.5rem;
+    /* Relative to the base size */
+}
+
+h2 {
+    font-size: 2rem;
+    /* Relative to the base size */
+}
+
+h3 {
+    font-size: 1.5rem;
+    /* Relative to the base size */
+}
+
+/* Set a minimum font size */
+@media (max-width: 600px) {
+    html {
+        font-size: 12px;
+        /* Minimum size for small screens */
+    }
+}
+
 
 .back-container {
     background-color: rgb(226, 243, 240);
     /* Light grey background */
     border-radius: 5px;
     /* Rounded corners of 5px */
-    padding: 20px;
+    padding: 5px;
     /* Adds padding inside the div */
 }
 
 .reps-input {
-    width: 60px;
+    width: 100%;
     /* Set width to 40px, fitting two digits */
-    height: 40px;
+    height: 30px;
     /* Make height equal to width for square shape */
     border-radius: 8px;
     /* Curved corners */
@@ -27,7 +54,7 @@
     /* Light grey border */
     text-align: center;
     /* Center the text */
-    font-size: 16px;
+    font-size: 1rem;
     /* Font size for the digits */
     margin-right: 5px;
     /* Small margin between fields */
@@ -47,7 +74,7 @@
 }
 
 .exercise-row td {
-    padding: 10px;
+    padding: 2px;
     /* Add some padding inside the cells */
     vertical-align: middle;
     /* Center the content vertically */
@@ -57,7 +84,7 @@
 .exercise-row input[type="number"] {
     width: 100%;
     /* Make inputs take full width of cell */
-    height: 40px;
+    height: 30px;
     /* Set consistent height for inputs */
     border-radius: 8px;
     /* Curved corners */
@@ -78,14 +105,6 @@
     /* Highlight border when input is focused */
 }
 
-/* Specifically target reps input fields */
-.reps-cell .reps-input {
-    width: 50px;
-    /* Smaller width for reps fields */
-    margin-right: 5px;
-    /* Small margin between each reps input */
-}
-
 .reps-cell {
     display: flex;
     /* Arrange reps inputs side by side */
@@ -96,4 +115,202 @@
 h1 {
     margin-bottom: 20px;
     /* Adjust the value as needed */
+}
+
+/* Styling for the form */
+#exerciseForm {
+    margin: 20px 0;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+/* Table styling */
+#exerciseTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+/* Table header */
+#exerciseTable thead th {
+    background-color: #f0f0f0;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 2px solid #ddd;
+}
+
+/* Table rows */
+#exerciseTable tbody tr {
+    border-bottom: 1px solid #ddd;
+}
+
+#exerciseTable tbody td {
+    padding: 10px;
+    vertical-align: middle;
+    text-align: center;
+    /* Center-aligns all input fields */
+}
+
+/* Input fields within the table */
+#exerciseTable .form-control {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    text-align: center;
+    /* Ensures text is centered in input fields */
+}
+
+/* Reps cell styling */
+#exerciseTable .reps-cell {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    /* Adds some space between dynamically added inputs */
+}
+
+/* Ensure reps input fields inside .reps-cell are styled consistently */
+#exerciseTable .reps-cell .form-control {
+    margin-bottom: 5px;
+}
+
+/* Adding hover effect for rows */
+#exerciseTable tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+
+/* Optional: Styling for the submit and add buttons */
+#exerciseForm button {
+    padding: 10px 20px;
+    margin-top: 10px;
+    border: none;
+    background-color: #5cb85c;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#exerciseForm button:hover {
+    background-color: #4cae4c;
+}
+
+#exerciseForm .btn-secondary {
+    background-color: #6c757d;
+    border: none;
+}
+
+#exerciseForm .btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.btn {
+    display: inline-block;
+    /* Make buttons inline-block for better control */
+    padding: 10px 20px;
+    /* Add padding to buttons */
+    margin: 0 auto;
+    /* Center button within its container */
+    max-width: 150px;
+    /* Set a max width for buttons */
+}
+
+#exerciseForm {
+    display: none;
+    /* Hide the form initially */
+}
+
+/* Adjust form-control styles */
+.table .form-control {
+    padding: 0.5rem;
+    /* Reduce vertical padding */
+    font-size: 1rem;
+    /* Ensure the font size scales well with the viewport */
+    height: auto;
+    /* Ensure the height adjusts based on content */
+}
+
+/* Adjust placeholder styling */
+.table .form-control::placeholder {
+    color: #888;
+    /* Change the placeholder color */
+    opacity: 1;
+    /* Ensures the opacity of the placeholder is 1 */
+    font-size: 0.9rem;
+    /* Adjust the font size of the placeholder */
+}
+
+/* Additional styles for the table to reduce spacing */
+.table {
+    margin-bottom: 0;
+    /* Remove bottom margin from table */
+}
+
+.table th,
+.table td {
+    padding: 0.5rem;
+    /* Reduce header and cell padding */
+    text-align: center;
+    /* Center align text in cells for consistency */
+}
+
+/* Optional: Adjust header font size if necessary */
+.table thead th {
+    font-size: 1.2rem;
+    /* Adjust header font size for better visibility */
+}
+
+/* Responsive adjustments */
+@media (max-width: 400px) {
+    .table .form-control {
+        font-size: 0.9rem;
+        /* Smaller font size for smaller screens */
+        padding: 0.25rem;
+        /* Further reduce padding on smaller screens */
+    }
+
+    .table th,
+    .table td {
+        padding: 0.25rem;
+        /* Further reduce padding for smaller screens */
+    }
+}
+
+.nav-link {
+    transition: background-color 0.3s, color 0.3s;
+    /* Smooth transition for background and text color */
+}
+
+.nav-link:hover {
+    background-color: #d1e7dd;
+    /* Change color on hover */
+}
+
+.nav-link.active {
+    background-color: #39619c;
+    /* Background color for the active link */
+    color: white;
+    /* Text color for the active link */
+    font-weight: bold;
+    /* Make active link bold */
+    border-radius: 5px;
+    /* Adjust the value for the desired corner radius */
+    padding: 5px 10px;
+    /* Optional: Add padding to create space around the text */
+}
+
+.navbar-nav {
+    white-space: nowrap;
+    /* Prevents the links from stacking */
+}
+
+.flex-nowrap {
+    display: flex;
+    /* Enables flexbox layout */
+    flex-wrap: nowrap;
+    /* Prevents wrapping of items */
 }

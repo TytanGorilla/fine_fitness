@@ -28,20 +28,28 @@
     <nav class="bg-light border navbar navbar-expand-md navbar-light">
         <div class="container-fluid">
             {% if session["user_id"] %}
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="/create">Train</a></li>
-                <li class="nav-item"><a class="nav-link" href="/design">Program Design</a></li>
-                <li class="nav-item"><a class="nav-link" href="/display">Training Logs</a></li>
+            <ul class="navbar-nav me-auto flex-nowrap">
+                <li class="nav-item"><a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">Home</a>
+                </li>
+                <li class="nav-item"><a class="nav-link {% if request.path == '/create' %}active{% endif %}"
+                        href="/create">Train</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.path == '/design' %}active{% endif %}"
+                        href="/design">Program Design</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.path == '/display' %}active{% endif %}"
+                        href="/display">Training Logs</a></li>
             </ul>
-            <ul class="navbar-nav ms-auto mt-2">
+            <ul class="navbar-nav ms-auto mt-2 flex-nowrap">
                 <li class="nav-item"><a class="nav-link" href="/logout">Log Out</a></li>
             </ul>
             {% else %}
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
-                <li class="nav-item"><a class="nav-link" href="/login">Log In</a></li>
+            <ul class="navbar-nav me-auto flex-nowrap">
+                <li class="nav-item"><a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">Home</a>
+                </li>
+                <li class="nav-item"><a class="nav-link {% if request.path == '/register' %}active{% endif %}"
+                        href="/register">Register</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.path == '/login' %}active{% endif %}"
+                        href="/login">Log
+                        In</a></li>
             </ul>
             {% endif %}
         </div>

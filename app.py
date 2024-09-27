@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, session, redirect
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
-from cs50 import SQL
 from functools import wraps # Comes with python so no need to install via requirements.txt
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime

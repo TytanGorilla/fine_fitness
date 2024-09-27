@@ -6,48 +6,57 @@ Create
 
 {% block main %}
 <div class="back-container">
-    <h1>Create</h1>
-    <p>Select an option</p>
-    <div class="container text-center custom-container">
-        <h2>Features</h2>
-        <div class="row">
-            <div class="col">Create training...</div>
-            <div class="container text-center">
-                <button type="button" onclick="showForm()" class="btn btn-secondary">Session</button>
+    <div id="buttonContainer" class="container text-center">
+        <h3>Create</h3>
+        <p>Select an option</p>
+        <div class="row justify-content-center mt-3 align-items-center">
+            <div class="col-auto">
+                <a href="javascript:void(0)" onclick="showForm()" class="btn btn-secondary">Session</a>
+            </div>
+            <div class="col-auto">
                 <a href="/design" class="btn btn-secondary">Program</a>
+            </div>
+            <div class="col-auto">
                 <a href="/design" class="btn btn-secondary">Block</a>
             </div>
         </div>
     </div>
-    <!-- Form that is initially hidden -->
-    <form id="exerciseForm" action="{{ url_for('submit_log') }}" method="POST">
-        <input type="hidden" name="user_id" value="{{ user_id }}">
-        <table id="exerciseTable">
-            <thead>
-                <tr>
-                    <th>Exercise Name</th>
-                    <th>Load (kg)</th>
-                    <th>Sets</th>
-                    <th>Reps</th>
-                    <th>RIR</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr class="exercise-row">
-                    <td><input type="text" name="exercise_name[]" placeholder="Exercise"></td>
-                    <td><input type="number" name="load[]" placeholder="Load (kg)"></td>
-                    <td><input type="number" name="sets[]" placeholder="Sets" oninput="updateRepsFields(this)"></td>
-                    <td class="reps-cell">
-                        <!-- Reps input fields will be inserted here dynamically -->
-                    </td>
-                    <td><input type="number" name="rir[]" placeholder="RIR"></td>
-                </tr>
-            </tbody>
-        </table>
 
-        <button type="button" onclick="addExerciseRow()">Add Exercise</button>
-        <button type="submit">Submit</button>
-    </form>
+    <!-- Wrap the form in a container to ensure layout consistency -->
+    <div class="container mt-4">
+        <!-- Form that is initially hidden -->
+        <form id="exerciseForm" action="{{ url_for('submit_log') }}" method="POST">
+            <input type="hidden" name="user_id" value="{{ user_id }}">
+            <table id="exerciseTable" class="table">
+                <thead>
+                    <tr>
+                        <th>Exercise Name</th>
+                        <th>Load (kg)</th>
+                        <th>Sets</th>
+                        <th>Reps</th>
+                        <th>RIR</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="exercise-row">
+                        <td><input type="text" name="exercise_name[]" placeholder="Exercise" class="form-control"></td>
+                        <td><input type="number" name="load[]" placeholder="Load (kg)" class="form-control"></td>
+                        <td><input type="number" name="sets[]" placeholder="Sets" class="form-control"
+                                oninput="updateRepsFields(this)"></td>
+                        <td class="reps-cell">
+                            <!-- Reps input fields will be inserted here dynamically -->
+                        </td>
+                        <td><input type="number" name="rir[]" placeholder="RIR" class="form-control"></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="mt-3">
+                <button type="button" onclick="addExerciseRow()" class="btn btn-primary">Add Exercise</button>
+                <button type="submit" class="btn btn-success">Submit</button>
+            </div>
+        </form>
+    </div> <!-- End of form container -->
 </div>
 {% endblock %}
 
