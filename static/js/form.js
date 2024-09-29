@@ -7,27 +7,6 @@ function showForm() {
     document.getElementById('buttonContainer').style.display = 'none';
 }
 
-// Function to dynamically add a new exercise row
-function addExerciseRow() {
-    const table = document.getElementById("exerciseTable").getElementsByTagName('tbody')[0];
-
-    // Create a new row
-    const newRow = table.insertRow();
-
-    // Add the "exercise-row" class to the new row
-    newRow.classList.add("exercise-row");
-
-    // Insert cells and inputs for the new row
-    newRow.innerHTML = `
-        <td><input type="text" name="exercise_name[]" placeholder="Exercise" class="form-control"></td>
-        <td><input type="number" name="load[]" placeholder="Load (kg)" class="form-control"></td>
-        <td><input type="number" name="sets[]" placeholder="Sets" oninput="updateRepsFields(this)" class="form-control"></td>
-        <td class="reps-cell">
-            <!-- Reps input fields will be inserted here dynamically -->
-        </td>
-        <td><input type="number" name="rir[]" placeholder="RIR" class="form-control"></td>
-    `;
-}
 
 // Optional: Ensure the form is hidden by default when the page loads
 window.onload = function () {
@@ -35,20 +14,43 @@ window.onload = function () {
     exerciseForm.style.display = "none";  // Hide the form initially
 }
 
+// Function to dynamically add a new exercise row
+function addExerciseRow() {
+    const tableBody = document.querySelector("#exerciseTable tbody");
+    const newRow = document.createElement('tr');
+    newRow.classList.add("exercise-row");
+
+    newRow.innerHTML = `
+        <td><input type="text" name="exercise_name[]" placeholder="Exercise" class="form-control"></td>
+        <td><input type="number" name="load[]" placeholder="Load (kg)" class="form-control"></td>
+        <td><input type="number" name="sets[]" placeholder="Sets" oninput="updateRepsFields(this)" class="form-control"></td>
+        <td class="reps-cell"></td>
+        <td><input type="number" name="rir[]" placeholder="RIR" class="form-control"></td>
+    `;
+
+    tableBody.appendChild(newRow);  // Append the new row
+}
+
+
 // Function to dynamically create reps fields based on the number of sets
 function updateRepsFields(setsInput) {
-    const sets = setsInput.value;
-    const repsCell = setsInput.closest('tr').querySelector('.reps-cell');
-    repsCell.innerHTML = ''; // Clear existing reps inputs
+    const row = setsInput.closest('tr');  // Get the closest table row
+    const rowIndex = Array.from(row.parentNode.children).indexOf(row);  // Get the index of the row
+    const setsValue = parseInt(setsInput.value) || 0;  // Get the number of sets
+    const repsCell = row.querySelector('.reps-cell');  // Find the reps cell in the current row
 
-    for (let i = 0; i < sets; i++) {
+    // Clear any existing reps input fields
+    repsCell.innerHTML = '';
+
+    // Add reps input fields based on the number of sets
+    for (let i = 0; i < setsValue; i++) {
         const repsInput = document.createElement('input');
         repsInput.type = 'number';
-        repsInput.name = `reps[${setsInput.closest('tr').rowIndex}][${i}]`; // Use array-like notation
+        repsInput.name = `reps[${rowIndex}][]`;  // Use the row index for the exercise  // Use the row index and set index
         repsInput.placeholder = `Reps Set ${i + 1}`;
-        repsInput.classList.add('reps-input'); // Add styling class if needed
-        repsInput.classList.add('form-control')
-        repsCell.appendChild(repsInput);
+        repsInput.classList.add('reps-input', 'form-control');
+
+        repsCell.appendChild(repsInput);  // Append the new input field
     }
 }
 
