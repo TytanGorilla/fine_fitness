@@ -6,8 +6,7 @@ Display
 
 {% block main %}
 <div class="back-container">
-    <h1>Display</h1>
-    <p>Select an filter to display</p>
+    <h2>Select an filter to display</h2>
     <div class="container text-center custom-container">
         <h2>Features</h2>
         <div class="row">
@@ -18,4 +17,8 @@ Display
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/form.js') }}"></script>
 {% endblock %}

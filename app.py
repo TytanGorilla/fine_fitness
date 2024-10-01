@@ -38,7 +38,7 @@ class Log(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Auto-incrementing primary key
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # User ID column
     exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.id'), nullable=False)  # Exercise ID column
-    program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=True)  # Program ID column
+    session_id = db.Column(db.Integer, db.ForeignKey('sessions.id'), nullable=True)  # New session relationship
     load = db.Column(db.Integer, nullable=False)  # Load column
     sets = db.Column(db.Integer, nullable=False)  # Sets column
     reps = db.Column(db.String, nullable=False)  # Store reps as CSV string
@@ -56,8 +56,62 @@ class Program(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Auto-incrementing primary key
     name = db.Column(db.String, nullable=False)
 
-    # Relationships to logs (one program can have many logs)
-    logs = db.relationship('Log', backref='program', lazy=True)
+    # Relationships
+    meso_cycles = db.relationship('MesoCycle', backref='program', lazy=True)
+
+class MesoCycle(db.Model):
+    __tablename__ = 'meso_cycles'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    start_date = db.Column(db.Date, nullable=False)
+    #end_date = db.Column(db.Date, nullable=True)  # Leave null until the end is confirmed
+
+    # Foreign key to Program
+    program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=False)
+
+    # Relationships
+    training_weeks = db.relationship('TrainingWeek', backref='meso_cycle', lazy=True)
+
+class TrainingWeek(db.Model):
+    __tablename__ = 'training_weeks'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    week_number = db.Column(db.Integer, nullable=False)  # Week number in the meso cycle (1, 2, 3, etc.)
+    start_date = db.Column(db.Date, nullable=False)
+    #end_date = db.Column(db.Date, nullable=False)
+    deload_week = db.Column(db.Boolean, default=False)  # Whether this week is a deload week
+
+    # Foreign key to MesoCycle
+    meso_cycle_id = db.Column(db.Integer, db.ForeignKey('meso_cycles.id'), nullable=False)
+
+    # Relationships
+    training_days = db.relationship('TrainingDay', backref='training_week', lazy=True)
+
+class TrainingDay(db.Model):
+    __tablename__ = 'training_days'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    day_number = db.Column(db.Integer, nullable=False)  # Day number in the week (1, 2, 3, etc.)
+    date = db.Column(db.Date, nullable=False)
+
+    # Foreign key to TrainingWeek
+    training_week_id = db.Column(db.Integer, db.ForeignKey('training_weeks.id'), nullable=False)
+
+    # Relationships
+    sessions = db.relationship('Session', backref='training_day', lazy=True)
+
+class Session(db.Model):
+    __tablename__ = 'sessions'
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String, nullable=False)  # Name of the session (e.g., Upper Body, Lower Body)
+    
+    # Foreign key to TrainingDay
+    training_day_id = db.Column(db.Integer, db.ForeignKey('training_days.id'), nullable=False)
+
+    # Relationship to Logs
+    logs = db.relationship('Log', backref='session', lazy=True)
+
 
 
 # Create the database and tables if they don't exist
@@ -260,6 +314,52 @@ def submit_log():
     #flash('Log successfully saved!', 'success')
     return redirect(url_for('index'))
 
+@app.route('/create_program', methods=['POST'])
+def create_program():
+    program_name = request.form.get('program_name')
+    start_date_str = request.form.get('start_date')
+    weeks = int(request.form.get('weeks'))
+    training_days = request.form.getlist('training_days[]')  # Get selected training days from checkboxes
+
+    # Convert start_date string to a Python date object
+    start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+
+    # Create the program
+    program = Program(name=program_name)
+    db.session.add(program)
+    db.session.commit()
+
+    # Create the meso cycle
+    meso_cycle = MesoCycle(
+        start_date=start_date,
+        program_id=program.id
+    )
+    db.session.add(meso_cycle)
+    db.session.commit()
+
+    # Create the training weeks and training days (based on selected days)
+    for week_num in range(1, weeks + 1):
+        # You can calculate the week start date and end date here if needed
+        training_week = TrainingWeek(
+            week_number=week_num,
+            start_date=start_date,  # Adjust start_date for each week
+            #end_date=None,  # Adjust end_date if necessary
+            meso_cycle_id=meso_cycle.id
+        )
+        db.session.add(training_week)
+        db.session.commit()
+
+        # Create training days based on selected checkboxes
+        for day in training_days:
+            training_day = TrainingDay(
+                day_number=day,  # Save the day name (e.g., "Monday", "Tuesday", etc.)
+                date=start_date,  # Adjust this for each day within the week
+                training_week_id=training_week.id
+            )
+            db.session.add(training_day)
+        db.session.commit()
+
+    return redirect('/')
 
 
 if __name__ == '__main__':

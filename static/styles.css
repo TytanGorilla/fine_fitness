@@ -1,6 +1,7 @@
+/* Set base font size dynamically but with limits */
 html {
-    font-size: 2vw;
-    /* Set the base font size according to the viewport width */
+    font-size: clamp(12px, 1.5vw, 18px);
+    /* Minimum of 12px, scales with viewport, max of 18px */
 }
 
 body {
@@ -26,7 +27,7 @@ h3 {
 }
 
 /* Set a minimum font size */
-@media (max-width: 600px) {
+@media (max-width: 450px) {
     html {
         font-size: 12px;
         /* Minimum size for small screens */
@@ -43,21 +44,15 @@ h3 {
     /* Adds padding inside the div */
 }
 
+/* Styling for .reps-input */
 .reps-input {
-    width: 100%;
-    /* Set width to 40px, fitting two digits */
+    width: auto;
     height: 30px;
-    /* Make height equal to width for square shape */
     border-radius: 8px;
-    /* Curved corners */
     border: 1px solid #ccc;
-    /* Light grey border */
     text-align: center;
-    /* Center the text */
     font-size: 1rem;
-    /* Font size for the digits */
-    margin-right: 5px;
-    /* Small margin between fields */
+    margin-right: 2px;
 }
 
 .reps-input:focus {
@@ -90,12 +85,14 @@ h3 {
     /* Curved corners */
     border: 1px solid #ccc;
     /* Light border */
-    padding: 5px;
+    padding: 2px;
     /* Add some padding inside the inputs */
-    font-size: 14px;
+    font-size: 12px;
     /* Consistent font size */
     box-sizing: border-box;
     /* Ensure padding doesn't affect width */
+    margin: 0;
+    /* Remove or reduce margin around input fields */
 }
 
 .exercise-row input[type="text"]:focus,
@@ -108,8 +105,16 @@ h3 {
 .reps-cell {
     display: flex;
     /* Arrange reps inputs side by side */
-    gap: 5px;
+    gap: 2px;
     /* Gap between reps fields */
+}
+
+/* If you want even tighter control over the reps inputs */
+.reps-cell .form-control {
+    padding: 2px;
+    /* Smaller padding for reps input fields */
+    margin-bottom: 3px;
+    /* Less margin between reps fields */
 }
 
 h1 {
@@ -119,7 +124,7 @@ h1 {
 
 /* Styling for the form */
 #exerciseForm {
-    margin: 20px 0;
+    margin: 10px 0;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -130,13 +135,25 @@ h1 {
 #exerciseTable {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
+    margin-bottom: 5px;
+    table-layout: auto;
+    /* Allow table to automatically determine column widths */
+    overflow-x: auto;
+    /* Add scroll if the table is too wide for smaller screens */
+}
+
+/* Ensure parent container respects the minimum size of the table */
+.container {
+    width: 100%;
+    /* Full width of the viewport */
+    min-width: 450px;
+    /* Ensure the parent container doesn't shrink below the table’s min width */
 }
 
 /* Table header */
 #exerciseTable thead th {
     background-color: #f0f0f0;
-    padding: 10px;
+    padding: 5px;
     text-align: center;
     font-weight: bold;
     border-bottom: 2px solid #ddd;
@@ -148,7 +165,7 @@ h1 {
 }
 
 #exerciseTable tbody td {
-    padding: 10px;
+    padding: 2px;
     vertical-align: middle;
     text-align: center;
     /* Center-aligns all input fields */
@@ -157,7 +174,7 @@ h1 {
 /* Input fields within the table */
 #exerciseTable .form-control {
     width: 100%;
-    padding: 8px;
+    padding: 5px;
     box-sizing: border-box;
     text-align: center;
     /* Ensures text is centered in input fields */
@@ -169,13 +186,13 @@ h1 {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap: 5px;
+    gap: 2px;
     /* Adds some space between dynamically added inputs */
 }
 
 /* Ensure reps input fields inside .reps-cell are styled consistently */
 #exerciseTable .reps-cell .form-control {
-    margin-bottom: 5px;
+    margin-bottom: 2px;
 }
 
 /* Adding hover effect for rows */
@@ -183,11 +200,10 @@ h1 {
     background-color: #f1f1f1;
 }
 
-
 /* Optional: Styling for the submit and add buttons */
 #exerciseForm button {
     padding: 10px 20px;
-    margin-top: 10px;
+    margin-top: 5px;
     border: none;
     background-color: #5cb85c;
     color: white;
@@ -288,6 +304,10 @@ h1 {
 .nav-link:hover {
     background-color: #d1e7dd;
     /* Change color on hover */
+    border-radius: 5px;
+    /* Adjust the value for the desired corner radius */
+    padding: 5px 10px;
+    /* Optional: Add padding to create space around the text */
 }
 
 .nav-link.active {
@@ -313,4 +333,16 @@ h1 {
     /* Enables flexbox layout */
     flex-wrap: nowrap;
     /* Prevents wrapping of items */
+}
+
+/* For webkit browsers */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* For Firefox */
+input[type="number"] {
+    -moz-appearance: textfield;
 }

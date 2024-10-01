@@ -47,7 +47,7 @@ function updateRepsFields(setsInput) {
         const repsInput = document.createElement('input');
         repsInput.type = 'number';
         repsInput.name = `reps[${rowIndex}][]`;  // Use the row index for the exercise  // Use the row index and set index
-        repsInput.placeholder = `Reps Set ${i + 1}`;
+        repsInput.placeholder = `Set ${i + 1} Reps`;
         repsInput.classList.add('reps-input', 'form-control');
 
         repsCell.appendChild(repsInput);  // Append the new input field
@@ -63,4 +63,26 @@ document.querySelectorAll('.nav-link').forEach(link => {
         // Add 'active' class to the clicked link
         this.classList.add('active');
     });
+});
+
+// Flag to track if there are unsaved changes
+let hasUnsavedChanges = false;
+
+// Function to mark that there are unsaved changes
+function markUnsavedChanges() {
+    hasUnsavedChanges = true;
+}
+
+// Attach the input event to all form inputs to track changes
+document.querySelectorAll('input').forEach(input => {
+    input.addEventListener('input', markUnsavedChanges);
+});
+
+// Listen for the beforeunload event
+window.addEventListener('beforeunload', function (event) {
+    if (hasUnsavedChanges) {
+        const confirmationMessage = "You have unsaved changes. Are you sure you want to leave?";
+        event.returnValue = confirmationMessage; // This line is required for most browsers
+        return confirmationMessage; // For some browsers
+    }
 });
