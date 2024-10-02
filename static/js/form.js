@@ -21,14 +21,23 @@ function addExerciseRow() {
     newRow.classList.add("exercise-row");
 
     newRow.innerHTML = `
-        <td><input type="text" name="exercise_name[]" placeholder="Exercise" class="form-control"></td>
-        <td><input type="number" name="load[]" placeholder="Load (kg)" class="form-control"></td>
-        <td><input type="number" name="sets[]" placeholder="Sets" oninput="updateRepsFields(this)" class="form-control"></td>
+        <td><input type="text" name="exercise_name[]" placeholder="Exercise" class="form-control" required></td>
+        <td><input type="number" name="load[]" placeholder="Load (kg)" class="form-control" required></td>
+        <td><input type="number" name="sets[]" placeholder="Sets" oninput="updateRepsFields(this)" class="form-control" required></td>
         <td class="reps-cell"></td>
-        <td><input type="number" name="rir[]" placeholder="RIR" class="form-control"></td>
+        <td><input type="number" name="rir[]" placeholder="RIR" class="form-control" required></td>
+        <td><button type="button" class="btn btn-danger" onclick="confirmRemoveRow(this)">Remove</button></td>
     `;
 
     tableBody.appendChild(newRow);  // Append the new row
+}
+
+function confirmRemoveRow(button) {
+    const row = button.closest('tr');
+    const confirmDelete = confirm("Are you sure you want to delete this exercise?");
+    if (confirmDelete) {
+        row.remove();  // Remove the row if the user confirms
+    }
 }
 
 
@@ -49,6 +58,7 @@ function updateRepsFields(setsInput) {
         repsInput.name = `reps[${rowIndex}][]`;  // Use the row index for the exercise  // Use the row index and set index
         repsInput.placeholder = `Set ${i + 1} Reps`;
         repsInput.classList.add('reps-input', 'form-control');
+        repsInput.required = true;  // Add the required attribute
 
         repsCell.appendChild(repsInput);  // Append the new input field
     }

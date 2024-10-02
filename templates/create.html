@@ -27,6 +27,18 @@ Create
         <!-- Form that is initially hidden -->
         <form id="exerciseForm" action="{{ url_for('submit_log') }}" method="POST">
             <input type="hidden" name="user_id" value="{{ user_id }}">
+
+            <!-- Dropdown for selecting a program -->
+            <div class="form-group">
+                <label for="program">Select Program:</label>
+                <select id="program" name="program_id" class="form-control" required>
+                    <option value="" disabled selected>Select a Program</option>
+                    {% for program in programs %}
+                    <option value="{{ program.id }}">{{ program.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
             <table id="exerciseTable" class="table">
                 <thead>
                     <tr>
@@ -39,22 +51,31 @@ Create
                 </thead>
                 <tbody>
                     <tr class="exercise-row">
-                        <td><input type="text" name="exercise_name[]" placeholder="Exercise" class="form-control"></td>
-                        <td><input type="number" name="load[]" placeholder="Load (kg)" class="form-control"></td>
-                        <td><input type="number" name="sets[]" placeholder="Sets" class="form-control"
+                        <td><input type="text" name="exercise_name[]" placeholder="Exercise" class="form-control"
+                                required></td>
+                        <td><input type="number" name="load[]" placeholder="Load (kg)" class="form-control" required>
+                        </td>
+                        <td><input type="number" name="sets[]" placeholder="Sets" class="form-control required"
                                 oninput="updateRepsFields(this)"></td>
                         <td class="reps-cell">
                             <!-- Reps input fields will be inserted here dynamically -->
                         </td>
-                        <td><input type="number" name="rir[]" placeholder="RIR" class="form-control"></td>
+                        <td><input type="number" name="rir[]" placeholder="RIR" class="form-control" required></td>
+                        <td><button type="button" class="btn btn-danger"
+                                onclick="confirmRemoveRow(this)">Remove</button></td> <!-- Remove button -->
                     </tr>
                 </tbody>
             </table>
 
+            <!-- Move "Add Exercise" button above "Submit" button -->
             <div class="mt-3">
                 <button type="button" onclick="addExerciseRow()" class="btn btn-primary">Add Exercise</button>
+            </div>
+
+            <div class="mt-3">
                 <button type="submit" class="btn btn-success">Submit</button>
             </div>
+
         </form>
     </div> <!-- End of form container -->
 </div>

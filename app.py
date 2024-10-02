@@ -37,6 +37,7 @@ class Log(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Auto-incrementing primary key
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # User ID column
+    program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=True)  
     exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.id'), nullable=False)  # Exercise ID column
     session_id = db.Column(db.Integer, db.ForeignKey('sessions.id'), nullable=True)  # New session relationship
     load = db.Column(db.Integer, nullable=False)  # Load column
@@ -49,6 +50,7 @@ class Log(db.Model):
     # Relationships (not mandatory but useful for easier access)
     user = db.relationship('User', backref=db.backref('logs', lazy=True))
     exercise = db.relationship('Exercise', backref=db.backref('logs', lazy=True))
+    program = db.relationship('Program', backref=db.backref('logs', lazy=True))  # Add relationship to Program
 
 class Program(db.Model):
     __tablename__ = 'programs'  # Define the table name
@@ -246,10 +248,16 @@ def logout():
     return redirect("/")
 
 
-@app.route("/create", methods=["GET", "POST"])
-@login_required
+@app.route('/create', methods=['GET', 'POST'])
 def create():
-    return render_template("create.html")
+    # Fetch programs from the database
+    programs = Program.query.all()  # Fetch all programs (adjust as needed)
+    
+    if request.method == 'POST':
+        # Handle form submission logic here
+        ...
+
+    return render_template('create.html', programs=programs, user_id=session['user_id'])
 
 
 @app.route("/display", methods=["GET", "POST"])
@@ -267,6 +275,7 @@ def design():
 def submit_log():
     # Get data from the form
     user_id = request.form.get('user_id')  # Ensure user_id is present
+    program_id = request.form.get('program_id')  # Get the selected program ID
     exercise_names = request.form.getlist('exercise_name[]')  # List of exercise names
     loads = request.form.getlist('load[]')  # List of loads
     sets = request.form.getlist('sets[]')  # List of sets
@@ -278,6 +287,11 @@ def submit_log():
         load_value = int(loads[i]) if loads[i] else 0
         sets_value = int(sets[i]) if sets[i] else 0
         rir_value = int(rirs[i]) if rirs[i] else 0
+
+        # Ensure required fields are not empty
+        if not ex_name or load_value is None or sets_value is None or rir_value is None:
+            # Skip this iteration if any field is empty
+            continue
 
         # Check if the exercise already exists in the Exercise table
         exercise = Exercise.query.filter_by(exercise_name=ex_name).first()
@@ -293,12 +307,13 @@ def submit_log():
 
         # Capture reps for each set and join them into a CSV string
         reps = request.form.getlist(f'reps[{i}][]')  # Get reps for this exercise (row i)
-        reps_csv = ','.join(reps)  # Store reps as CSV string
+        reps_csv = ','.join(reps) if reps else None
 
         # Create a new log entry
         log = Log(
             user_id=user_id,
-            exercise_id=exercise_id,  # Use the retrieved or newly created exercise ID
+            exercise_id=exercise_id,
+            program_id=program_id,  # Save the selected program ID  # Use the retrieved or newly created exercise ID
             load=load_value,
             sets=sets_value,
             reps=reps_csv,  # Store CSV string of reps
