@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, redirect, url_for
+from flask import Flask, render_template, request, session, redirect, url_for, jsonify
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from functools import wraps # Comes with python so no need to install via requirements.txt
@@ -37,7 +37,8 @@ class Log(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Auto-incrementing primary key
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # User ID column
-    program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=True)  
+    program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=True)
+    mesocycle_id = db.Column(db.Integer, db.ForeignKey('meso_cycles.id'), nullable=True)  # Mesocycle
     exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.id'), nullable=False)  # Exercise ID column
     session_id = db.Column(db.Integer, db.ForeignKey('sessions.id'), nullable=True)  # New session relationship
     load = db.Column(db.Integer, nullable=False)  # Load column
@@ -46,11 +47,12 @@ class Log(db.Model):
     rir = db.Column(db.Integer, nullable=False)  # RIR column
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)  # Use current timestamp
 
-
     # Relationships (not mandatory but useful for easier access)
     user = db.relationship('User', backref=db.backref('logs', lazy=True))
-    exercise = db.relationship('Exercise', backref=db.backref('logs', lazy=True))
     program = db.relationship('Program', backref=db.backref('logs', lazy=True))  # Add relationship to Program
+    mesocycle = db.relationship('MesoCycle', backref=db.backref('logs', lazy=True))
+    exercise = db.relationship('Exercise', backref=db.backref('logs', lazy=True))
+    session = db.relationship('Session', backref=db.backref('logs', lazy=True))
 
 class Program(db.Model):
     __tablename__ = 'programs'  # Define the table name
@@ -65,54 +67,40 @@ class MesoCycle(db.Model):
     __tablename__ = 'meso_cycles'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    start_date = db.Column(db.Date, nullable=False)
-    #end_date = db.Column(db.Date, nullable=True)  # Leave null until the end is confirmed
 
-    # Foreign key to Program
-    program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    total_weeks = db.Column(db.Integer, nullable=False)  # New column for total weeks
+    program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=False) # Foreign key to Program
 
     # Relationships
     training_weeks = db.relationship('TrainingWeek', backref='meso_cycle', lazy=True)
+
 
 class TrainingWeek(db.Model):
     __tablename__ = 'training_weeks'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    week_number = db.Column(db.Integer, nullable=False)  # Week number in the meso cycle (1, 2, 3, etc.)
-    start_date = db.Column(db.Date, nullable=False)
-    #end_date = db.Column(db.Date, nullable=False)
-    deload_week = db.Column(db.Boolean, default=False)  # Whether this week is a deload week
 
-    # Foreign key to MesoCycle
-    meso_cycle_id = db.Column(db.Integer, db.ForeignKey('meso_cycles.id'), nullable=False)
+    week_number = db.Column(db.Integer, nullable=False)  # Week number in the meso cycle
+    #deload_week = db.Column(db.Boolean, default=False)  # Whether this week is a deload week
+    meso_cycle_id = db.Column(db.Integer, db.ForeignKey('meso_cycles.id'), nullable=False) # Foreign key to MesoCycle
+    week_split = db.Column(db.String, nullable=False)
 
     # Relationships
-    training_days = db.relationship('TrainingDay', backref='training_week', lazy=True)
+    sessions = db.relationship('Session', backref='training_week', lazy=True)
 
-class TrainingDay(db.Model):
-    __tablename__ = 'training_days'
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    day_number = db.Column(db.Integer, nullable=False)  # Day number in the week (1, 2, 3, etc.)
-    date = db.Column(db.Date, nullable=False)
-
-    # Foreign key to TrainingWeek
-    training_week_id = db.Column(db.Integer, db.ForeignKey('training_weeks.id'), nullable=False)
-
-    # Relationships
-    sessions = db.relationship('Session', backref='training_day', lazy=True)
 
 class Session(db.Model):
     __tablename__ = 'sessions'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
     name = db.Column(db.String, nullable=False)  # Name of the session (e.g., Upper Body, Lower Body)
-    
-    # Foreign key to TrainingDay
-    training_day_id = db.Column(db.Integer, db.ForeignKey('training_days.id'), nullable=False)
+    day_of_week = db.Column(db.Integer, nullable=False)  # Day of the week (1 for Monday, 2 for Tuesday, etc.)
+    training_week_id = db.Column(db.Integer, db.ForeignKey('training_weeks.id'), nullable=False) # Foreign key to TrainingWeek
 
     # Relationship to Logs
-    logs = db.relationship('Log', backref='session', lazy=True)
+    #logs = db.relationship('Log', backref='session', lazy=True)
 
 
 
@@ -249,6 +237,7 @@ def logout():
 
 
 @app.route('/create', methods=['GET', 'POST'])
+@login_required
 def create():
     # Fetch programs from the database
     programs = Program.query.all()  # Fetch all programs (adjust as needed)
@@ -280,6 +269,49 @@ def submit_log():
     loads = request.form.getlist('load[]')  # List of loads
     sets = request.form.getlist('sets[]')  # List of sets
     rirs = request.form.getlist('rir[]')  # List of RIRs
+    new_week_number = int(request.form.get('week_number'))  # Selected week number
+    session_day = int(request.form.get('session_day'))  # Selected day for the session (from dropdown)
+    session_name = request.form.get('session_name')  # Session name (optional)
+
+    print(f"Program ID: {program_id}, Week Number: {new_week_number}")  # Debugging
+
+    # Fetch relevant mesocycle pertaining to this log
+    mesocycle = MesoCycle.query.filter_by(id=program_id).first()
+    if not mesocycle:
+        return "Mesocycle not found", 400
+
+    ##############################
+    # Find training weeks pertaining to this mesocycle
+    training_weeks = TrainingWeek.query.filter_by(meso_cycle_id=mesocycle.id).all()
+    if not training_weeks:
+        return "Training weeks not found", 400
+    
+    base_week = next((week for week in training_weeks if week.week_number == 1), None) # Get the base week, should be present after program creation
+    training_week = next((week for week in training_weeks if week.week_number == new_week_number), None)
+    if not training_week:
+        # Handle the case where no matching training week is found
+        print("No matching training week found")
+        # Create a new training week if new_week_number is not found in the database
+        new_training_week = TrainingWeek(week_number=new_week_number, meso_cycle_id=mesocycle.id, week_split=base_week.week_split)
+        db.session.add(new_training_week)
+        db.session.commit()
+        training_week_id = new_training_week.id
+    else:
+        training_week_id = training_week.id
+
+
+    # Check if a session for this day and week already exists
+    session = Session.query.filter_by(day_of_week=session_day, training_week_id=training_week_id).first()
+
+    # If session doesn't exist, create a new one
+    if not session:
+        session = Session(
+            name=session_name if session_name else f"Session for Day {session_day}",  # Optional session name
+            day_of_week=session_day,
+            training_week_id=training_week_id
+        )
+        db.session.add(session)
+        db.session.commit()
 
     # Loop through each exercise entry
     for i in range(len(exercise_names)):
@@ -289,8 +321,7 @@ def submit_log():
         rir_value = int(rirs[i]) if rirs[i] else 0
 
         # Ensure required fields are not empty
-        if not ex_name or load_value is None or sets_value is None or rir_value is None:
-            # Skip this iteration if any field is empty
+        if not all([ex_name, load_value, sets_value, rir_value]):
             continue
 
         # Check if the exercise already exists in the Exercise table
@@ -301,19 +332,22 @@ def submit_log():
             new_exercise = Exercise(exercise_name=ex_name)
             db.session.add(new_exercise)
             db.session.commit()  # Commit to get the ID for the new exercise
+            db.session.flush()  # Flush to get the ID without committing
             exercise_id = new_exercise.id  # Use the ID of the newly created exercise
         else:
             exercise_id = exercise.id  # Use the existing exercise ID
 
         # Capture reps for each set and join them into a CSV string
         reps = request.form.getlist(f'reps[{i}][]')  # Get reps for this exercise (row i)
-        reps_csv = ','.join(reps) if reps else None
+        reps_csv = ','.join(reps) if reps else ''
 
         # Create a new log entry
         log = Log(
             user_id=user_id,
-            exercise_id=exercise_id,
             program_id=program_id,  # Save the selected program ID  # Use the retrieved or newly created exercise ID
+            mesocycle_id=mesocycle.id,
+            exercise_id=exercise_id,
+            session_id=session.id,  # Associate the log with the session
             load=load_value,
             sets=sets_value,
             reps=reps_csv,  # Store CSV string of reps
@@ -333,8 +367,11 @@ def submit_log():
 def create_program():
     program_name = request.form.get('program_name')
     start_date_str = request.form.get('start_date')
-    weeks = int(request.form.get('weeks'))
+    weeks = int(request.form.get('weeks')) # Get the number of weeks from the design form
     training_days = request.form.getlist('training_days[]')  # Get selected training days from checkboxes
+
+    # Concatenate the training days into a string or process them as integers
+    training_days_str = ','.join(training_days)  # Example: '1,2,4,5' for Mon, Tue, Thu, Fri
 
     # Convert start_date string to a Python date object
     start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
@@ -347,34 +384,82 @@ def create_program():
     # Create the meso cycle
     meso_cycle = MesoCycle(
         start_date=start_date,
+        total_weeks=weeks,  # Pass total weeks to the meso cycle
         program_id=program.id
     )
     db.session.add(meso_cycle)
     db.session.commit()
 
-    # Create the training weeks and training days (based on selected days)
-    for week_num in range(1, weeks + 1):
-        # You can calculate the week start date and end date here if needed
-        training_week = TrainingWeek(
-            week_number=week_num,
-            start_date=start_date,  # Adjust start_date for each week
-            #end_date=None,  # Adjust end_date if necessary
-            meso_cycle_id=meso_cycle.id
-        )
-        db.session.add(training_week)
-        db.session.commit()
-
-        # Create training days based on selected checkboxes
-        for day in training_days:
-            training_day = TrainingDay(
-                day_number=day,  # Save the day name (e.g., "Monday", "Tuesday", etc.)
-                date=start_date,  # Adjust this for each day within the week
-                training_week_id=training_week.id
-            )
-            db.session.add(training_day)
-        db.session.commit()
+    # Create the training week
+    split = TrainingWeek(
+        week_number=1, # Week 1 when you start a program.
+        meso_cycle_id=meso_cycle.id,
+        week_split=training_days_str
+        
+    )
+    db.session.add(split)
+    db.session.commit()
 
     return redirect('/')
+
+# Utility function to convert day number to day name
+def get_day_name(day_number):
+    days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    return days[day_number - 1]  # Since day_number is 1-based
+
+@app.route('/log/<int:program_id>', methods=['GET'])
+def log_form(program_id):
+    # Get the Program by its ID
+    program = Program.query.get(program_id)
+
+    # Retrieve associated training weeks (assuming one week, adjust if needed)
+    training_weeks = TrainingWeek.query.filter_by(meso_cycle_id=program.id).all()
+
+    # Extract week split from the CSV stored in the relevant TrainingWeek
+    training_days = []
+    for week in training_weeks:
+        training_days.extend([int(day) for day in week.week_split.split(',')])
+
+    # Generate a list of available day names for the dropdown
+    available_days = [(day, get_day_name(day)) for day in set(training_days)]  # Use set to avoid duplicates
+
+    # Render the log form, passing the available days
+    return render_template('create.html', available_days=available_days)
+
+@app.route('/get_training_days/<int:program_id>', methods=['GET'])
+def get_training_days(program_id):
+    # Fetch the program based on its ID
+    program = Program.query.get(program_id)
+    if not program:
+        return jsonify({'error': 'Program not found GET_TRAINING_DAYS'}), 404
+
+    # Fetch the meso cycle and training week associated with the program
+    meso_cycle = MesoCycle.query.filter_by(program_id=program_id).first()
+    training_week = TrainingWeek.query.filter_by(meso_cycle_id=meso_cycle.id).first()
+
+    # Extract training days from the CSV stored in `training_week.training_days`
+    training_days = [int(day) for day in training_week.week_split.split(',')]
+    available_days = [(day, get_day_name(day)) for day in training_days]
+
+    return jsonify(available_days)
+
+@app.route('/get_training_weeks/<int:program_id>', methods=['GET'])
+def get_training_weeks(program_id):
+    # Fetch the program based on its ID
+    program = Program.query.get(program_id)
+    if not program:
+        return jsonify({'error': 'Program not found GET_TRAINING_WEEKS'}), 404
+
+    # Fetch the meso cycle and training weekS associated with the program
+    meso_cycle = MesoCycle.query.filter_by(program_id=program_id).first()
+    training_weeks = meso_cycle.total_weeks
+
+    # Check if no training weeks are found
+    if not training_weeks:
+        print("No training weeks found for this program_id")  # Debugging line
+    
+    # Return the total week number
+    return jsonify({'total_weeks': training_weeks})
 
 
 if __name__ == '__main__':

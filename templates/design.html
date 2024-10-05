@@ -6,8 +6,7 @@ Design
 
 {% block main %}
 <div class="back-container">
-    <h1>Design</h1>
-    <p>Select a filter to display</p>
+    <h2>Design your training program</h2>
     <div class="container text-center custom-container">
         <form method="POST" action="/create_program">
             <!-- Program name -->
@@ -31,34 +30,31 @@ Design
             <div class="form-group">
                 <label>Training Days (Select the days of the week):</label>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="training_days[]" value="Monday" id="monday">
+                    <input class="form-check-input" type="checkbox" name="training_days[]" value="1" id="monday">
                     <label class="form-check-label" for="monday">Monday</label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="training_days[]" value="Tuesday" id="tuesday">
+                    <input class="form-check-input" type="checkbox" name="training_days[]" value="2" id="tuesday">
                     <label class="form-check-label" for="tuesday">Tuesday</label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="training_days[]" value="Wednesday"
-                        id="wednesday">
+                    <input class="form-check-input" type="checkbox" name="training_days[]" value="3" id="wednesday">
                     <label class="form-check-label" for="wednesday">Wednesday</label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="training_days[]" value="Thursday"
-                        id="thursday">
+                    <input class="form-check-input" type="checkbox" name="training_days[]" value="4" id="thursday">
                     <label class="form-check-label" for="thursday">Thursday</label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="training_days[]" value="Friday" id="friday">
+                    <input class="form-check-input" type="checkbox" name="training_days[]" value="5" id="friday">
                     <label class="form-check-label" for="friday">Friday</label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="training_days[]" value="Saturday"
-                        id="saturday">
+                    <input class="form-check-input" type="checkbox" name="training_days[]" value="6" id="saturday">
                     <label class="form-check-label" for="saturday">Saturday</label>
                 </div>
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="training_days[]" value="Sunday" id="sunday">
+                    <input class="form-check-input" type="checkbox" name="training_days[]" value="7" id="sunday">
                     <label class="form-check-label" for="sunday">Sunday</label>
                 </div>
             </div>

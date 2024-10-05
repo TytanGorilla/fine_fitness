@@ -31,10 +31,33 @@ Create
             <!-- Dropdown for selecting a program -->
             <div class="form-group">
                 <label for="program">Select Program:</label>
-                <select id="program" name="program_id" class="form-control" required>
+                <select id="program" name="program_id" class="form-control" required
+                    onchange="fetchTrainingWeeks(); fetchTrainingDays();">
                     <option value="" disabled selected>Select a Program</option>
                     {% for program in programs %}
                     <option value="{{ program.id }}">{{ program.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Dropdown for selecting week number -->
+            <div class="form-group">
+                <label for="week_number">Select Week Number:</label>
+                <select id="week_number" name="week_number" class="form-control" required>
+                    <option value="" disabled selected>Select a Week</option>
+                    <!-- Weeks will be populated here dynamically -->
+                </select>
+            </div>
+
+            <label for="session_name">Session Name (optional):</label>
+            <input type="text" name="session_name" placeholder="e.g., Upper Body">
+
+            <!-- Dropdown for session day -->
+            <div class="form-group">
+                <label for="session_day">Select Day:</label>
+                <select name="session_day" id="session_day" class="form-control" required>
+                    {% for day, day_name in available_days %}
+                    <option value="{{ day }}">{{ day_name }}</option>
                     {% endfor %}
                 </select>
             </div>

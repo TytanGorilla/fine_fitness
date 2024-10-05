@@ -346,3 +346,19 @@ input[type="number"]::-webkit-inner-spin-button {
 input[type="number"] {
     -moz-appearance: textfield;
 }
+
+.form-group {
+    text-align: left;
+    /* Left align the form group */
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.form-check-input {
+    margin-right: 10px;
+    /* Add space between checkbox and label */
+}

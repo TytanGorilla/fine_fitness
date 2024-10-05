@@ -96,3 +96,59 @@ window.addEventListener('beforeunload', function (event) {
         return confirmationMessage; // For some browsers
     }
 });
+
+function fetchTrainingDays() {
+    const programId = document.getElementById('program').value;
+    const sessionDaySelect = document.getElementById('session_day');
+
+    // Clear existing options
+    sessionDaySelect.innerHTML = '<option value="" disabled selected>Select Day</option>';
+
+    if (programId) {
+        fetch(`/get_training_days/${programId}`)
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(([day, day_name]) => {
+                    const option = document.createElement('option');
+                    option.value = day;
+                    option.textContent = day_name;
+                    sessionDaySelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching training days:', error);
+            });
+    }
+}
+
+function fetchTrainingWeeks() {
+    const programId = document.getElementById('program').value;
+    const weekDropdown = document.getElementById('week_number');
+
+    // Clear existing options
+    weekDropdown.innerHTML = '<option value="" disabled selected>Select a Week</option>';
+
+    if (programId) {
+        fetch(`/get_training_weeks/${programId}`)
+            .then(response => response.json())
+            .then(data => {
+                const totalWeeks = data.total_weeks;
+                if (totalWeeks > 0) {
+                    // Populate the dropdown with week numbers from 1 to maxWeek
+                    for (let i = 1; i <= totalWeeks; i++) {
+                        const option = document.createElement('option');
+                        option.value = i;
+                        option.textContent = `Week ${i}`;
+                        weekDropdown.appendChild(option);
+                    }
+                } else {
+                    console.log('No training weeks found for this program.');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching training weeks:', error);
+            });
+    }
+}
+
+
