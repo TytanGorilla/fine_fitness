@@ -4,8 +4,19 @@ from flask_sqlalchemy import SQLAlchemy
 from functools import wraps # Comes with python so no need to install via requirements.txt
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime
+from dash import Dash, dcc, html
+from dash.dependencies import Input, Output
+import plotly.express as px
+import plotly.graph_objects as go
+import pandas as pd
+from models import User, Exercise, Log, Program, MesoCycle, TrainingWeek, TrainingSession # Import your models
+from extensions import db # Import db from extensions
+
 
 app = Flask(__name__)
+
+# Initialize Dash
+dash_app = Dash(__name__, server=app, url_base_pathname='/dashboard/')
 
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_PERMANENT"] = False
@@ -15,94 +26,9 @@ Session(app)
 # Configure SQLite database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
 
-#Defined tables
-class User(db.Model):
-    __tablename__ = 'users'  # Define the table name
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Auto-incrementing primary key
-    user_name = db.Column(db.String, nullable=False, unique=True)  # Username column
-    hash = db.Column(db.String, nullable=False)  # Hash column for passwords
-
-class Exercise(db.Model):
-    __tablename__ = 'exercises'  # Define the table name
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Auto-incrementing primary key
-    exercise_name = db.Column(db.String, nullable=False, unique=True)  # Exercise_name column
-    description = db.Column(db.String) 
-
-class Log(db.Model):
-    __tablename__ = 'logs'  # Define the table name
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Auto-incrementing primary key
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # User ID column
-    program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=True)
-    mesocycle_id = db.Column(db.Integer, db.ForeignKey('meso_cycles.id'), nullable=True)  # Mesocycle
-    exercise_id = db.Column(db.Integer, db.ForeignKey('exercises.id'), nullable=False)  # Exercise ID column
-    session_id = db.Column(db.Integer, db.ForeignKey('sessions.id'), nullable=True)  # New session relationship
-    load = db.Column(db.Integer, nullable=False)  # Load column
-    sets = db.Column(db.Integer, nullable=False)  # Sets column
-    reps = db.Column(db.String, nullable=False)  # Store reps as CSV string
-    rir = db.Column(db.Integer, nullable=False)  # RIR column
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)  # Use current timestamp
-
-    # Relationships (not mandatory but useful for easier access)
-    user = db.relationship('User', backref=db.backref('logs', lazy=True))
-    program = db.relationship('Program', backref=db.backref('logs', lazy=True))  # Add relationship to Program
-    mesocycle = db.relationship('MesoCycle', backref=db.backref('logs', lazy=True))
-    exercise = db.relationship('Exercise', backref=db.backref('logs', lazy=True))
-    session = db.relationship('Session', backref=db.backref('logs', lazy=True))
-
-class Program(db.Model):
-    __tablename__ = 'programs'  # Define the table name
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # Auto-incrementing primary key
-    name = db.Column(db.String, nullable=False)
-
-    # Relationships
-    meso_cycles = db.relationship('MesoCycle', backref='program', lazy=True)
-
-class MesoCycle(db.Model):
-    __tablename__ = 'meso_cycles'
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-
-    start_date = db.Column(db.Date, nullable=False)
-    total_weeks = db.Column(db.Integer, nullable=False)  # New column for total weeks
-    program_id = db.Column(db.Integer, db.ForeignKey('programs.id'), nullable=False) # Foreign key to Program
-
-    # Relationships
-    training_weeks = db.relationship('TrainingWeek', backref='meso_cycle', lazy=True)
-
-
-class TrainingWeek(db.Model):
-    __tablename__ = 'training_weeks'
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-
-    week_number = db.Column(db.Integer, nullable=False)  # Week number in the meso cycle
-    #deload_week = db.Column(db.Boolean, default=False)  # Whether this week is a deload week
-    meso_cycle_id = db.Column(db.Integer, db.ForeignKey('meso_cycles.id'), nullable=False) # Foreign key to MesoCycle
-    week_split = db.Column(db.String, nullable=False)
-
-    # Relationships
-    sessions = db.relationship('Session', backref='training_week', lazy=True)
-
-
-class Session(db.Model):
-    __tablename__ = 'sessions'
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-
-    name = db.Column(db.String, nullable=False)  # Name of the session (e.g., Upper Body, Lower Body)
-    day_of_week = db.Column(db.Integer, nullable=False)  # Day of the week (1 for Monday, 2 for Tuesday, etc.)
-    training_week_id = db.Column(db.Integer, db.ForeignKey('training_weeks.id'), nullable=False) # Foreign key to TrainingWeek
-
-    # Relationship to Logs
-    #logs = db.relationship('Log', backref='session', lazy=True)
-
-
+# Initialize SQLAlchemy with the app AFTER it's created
+db.init_app(app)
 
 # Create the database and tables if they don't exist
 def create_db():
@@ -125,6 +51,194 @@ def login_required(f):
 
     return decorated_function
 
+### Dash Layout ###
+
+# Define the layout for Dash
+# Dash layout with 4 dropdowns
+dash_app.layout = html.Div([
+    # Program Dropdown
+    dcc.Dropdown(
+        id='program-dropdown',
+        placeholder="Select a Program",
+        style={'width': '50%'}
+    ),
+    # Week Dropdown
+    dcc.Dropdown(
+        id='week-dropdown',
+        placeholder="Select a Week",
+        style={'width': '50%'}
+    ),
+    # Session Dropdown
+    dcc.Dropdown(
+        id='session-dropdown',
+        placeholder="Select a Session",
+        style={'width': '50%'}
+    ),
+    # Exercise Dropdown
+    dcc.Dropdown(
+        id='exercise-dropdown',
+        placeholder="Select an Exercise",
+        style={'width': '50%'}
+    ),
+    # Metric Dropdown
+    dcc.Dropdown(
+        id='metric-dropdown',
+        options=[
+        {'label': 'Volume', 'value': 'volume'},
+        {'label': 'Load over Time', 'value': 'load_time'},
+        {'label': 'Reps over Time', 'value': 'reps_time'}
+        ],
+        value='volume',  # Default value
+        clearable=False
+    ),
+
+    # Placeholder for graph
+    dcc.Graph(id='filtered-graph')
+])
+
+### Dash Callbacks ###
+@dash_app.callback(
+    Output('program-dropdown', 'options'),
+    Input('program-dropdown', 'value')  # Remove the 'url' input
+)
+def load_programs(_):
+    programs = Program.query.all()
+    return [{'label': program.name, 'value': program.id} for program in programs]
+
+
+@dash_app.callback(
+    Output('week-dropdown', 'options'),
+    Input('program-dropdown', 'value')  # Triggered when a program is selected
+)
+def load_weeks(program_id):
+    if program_id is None:
+        return []
+    weeks = TrainingWeek.query.join(MesoCycle).filter(MesoCycle.program_id == program_id).all()
+    options = [{'label': f'Week {week.week_number}', 'value': week.id} for week in weeks]
+    # Add "All Weeks" option
+    options.insert(0, {'label': 'All Weeks', 'value': 'all'})
+    return options
+
+
+@dash_app.callback(
+    Output('session-dropdown', 'options'),
+    Input('week-dropdown', 'value')  # Triggered when a week is selected
+)
+def load_sessions(week_id):
+    if week_id is None:
+        return []
+    # Handle "All Weeks" by not filtering by week
+    if week_id == 'all':
+        sessions = TrainingSession.query.all()  # Fetch sessions across all weeks
+    else:
+        sessions = TrainingSession.query.filter_by(training_week_id=week_id).all()
+
+    # Add the "All Sessions" option at the start of the dropdown
+    session_options = [{'label': 'All Sessions', 'value': 'all'}] + [{'label': session.name, 'value': session.id} for session in sessions]
+
+    return session_options
+
+
+@dash_app.callback(
+    Output('exercise-dropdown', 'options'),
+    Input('session-dropdown', 'value')  # Triggered when a session is selected
+)
+def load_exercises(session_id):
+    if session_id is None:
+        return []
+    exercises = Log.query.join(Exercise).filter(Log.session_id == session_id).all()
+
+    # Access the exercise_name via the relationship
+    return [{'label': log.exercise.exercise_name, 'value': log.exercise.id} for log in exercises]
+
+
+@dash_app.callback(
+    Output('filtered-graph', 'figure'),
+    [Input('program-dropdown', 'value'),
+    Input('week-dropdown', 'value'),
+    Input('session-dropdown', 'value'),
+    Input('exercise-dropdown', 'value'),
+    Input('metric-dropdown', 'value')]  # Metric selection]
+)
+def update_graph(program_id, week_id, session_id, exercise_id, metric):
+
+    # Query logs based on the filters and ensure necessary joins
+    query = Log.query\
+        .join(TrainingSession, Log.training_session_id == TrainingSession.id)\
+        .join(TrainingWeek, TrainingSession.training_week_id == TrainingWeek.id, isouter=True)\
+        .join(MesoCycle, TrainingWeek.meso_cycle_id == MesoCycle.id, isouter=True)
+        
+
+    # Filter based on MesoCycle if program_id is provided
+    if program_id:
+        query = query.filter(MesoCycle.program_id == program_id)
+
+    # Handle "All Weeks" scenario
+    if week_id and week_id != 'all':
+        query = query.filter(TrainingWeek.id == week_id)  # Filter based on TrainingWeek.id
+
+    if session_id and session_id != 'all':
+        query = query.filter(TrainingSession.id == session_id)
+
+    if exercise_id:
+        query = query.filter(Log.exercise_id == exercise_id)
+
+    print(str(query))  # Prints the SQL query
+    logs = query.all()
+
+
+    if not logs:
+    # Return an empty figure with no data if no logs are found
+        return go.Figure()
+    
+
+    # Extract log data
+    data = [{
+        'Exercise': log.exercise.exercise_name,
+        'Volume': log.load * log.sets * sum([int(rep) for rep in log.reps.split(',')]),  # Sum reps for all sets
+        'Load': log.load,
+        'Reps': sum([int(rep) for rep in log.reps.split(',')]),  # Total reps from all sets
+        'Reps Per Set': [int(rep) for rep in log.reps.split(',')],  # Reps per set as a list
+        'Sets': log.sets,
+        'Session ID': log.training_session_id,  # Include Session ID for comparison
+        'Week ID': log.training_week_id,  # Include Week ID for comparison
+        'Week Number': int(log.training_week.week_number),
+        'Time': log.timestamp,
+        'Total Weeks': log.mesocycle.total_weeks
+    } for log in logs]
+
+
+    df = pd.DataFrame(data)
+    # Debugging print to see the content of the DataFrame
+    print(df)
+    print(f"Total logs: {len(logs)}")
+    print(f"Rows in DataFrame: {len(df)}")
+
+
+    # Ensure the DataFrame is not empty
+    if df.empty:
+        return go.Figure()
+    
+    
+# Create figures based on selected metric
+    if metric == 'volume':
+        # Group the data by Week Number and Exercise to get total volume per week per exercise
+        week_summary = df.groupby(['Week Number', 'Exercise']).agg({'Volume': 'sum'}).reset_index()
+        # Debugging step to verify the week summary
+    print(week_summary)
+
+
+    # Create a bar chart to display Volume by Exercise across all weeks
+    fig = px.bar(week_summary, 
+            x='Week Number', 
+            y='Volume', 
+            color='Exercise',  # Differentiate each exercise by color
+            title='Total Volume by Exercise Across All Weeks',
+            barmode='group',
+            labels={'Volume': 'Total Volume', 'Week Number': 'Week Number'})
+    return fig
+
+### Routes ###
 
 @app.route("/", methods=["GET"]) 
 def index():
@@ -252,13 +366,38 @@ def create():
 @app.route("/display", methods=["GET", "POST"])
 @login_required
 def display():
-    return render_template("display.html")
+    # Fetch user logs or other data from the database
+    user_id = session["user_id"]  # Assuming you store user_id in the session
+    
+    # Example query to get logs for the current user
+    logs = Log.query.filter_by(user_id=user_id).all()
+
+    # Convert logs to a structured format to pass to the template
+    log_data = [
+        {
+            "Timestamp": log.timestamp,
+            "Exercise": log.exercise.exercise_name if log.exercise else None,
+            "Load": log.load,
+            "Sets": log.sets,
+            "Reps": log.reps,
+            "RIR": log.rir,
+            "Session": log.training_session.name if log.training_session else None,
+        }
+        for log in logs
+    ]
+
+    # Pass the data to the display.html template
+    return render_template("display.html", logs=log_data)
 
 
 @app.route("/design", methods=["GET", "POST"])
 @login_required
 def design():
+    user_id = session['user_id']
+
+
     return render_template("design.html")
+
 
 @app.route('/submit-log', methods=['POST'])
 def submit_log():
@@ -301,11 +440,11 @@ def submit_log():
 
 
     # Check if a session for this day and week already exists
-    session = Session.query.filter_by(day_of_week=session_day, training_week_id=training_week_id).first()
+    session = TrainingSession.query.filter_by(day_of_week=session_day, training_week_id=training_week_id).first()
 
     # If session doesn't exist, create a new one
     if not session:
-        session = Session(
+        session = TrainingSession(
             name=session_name if session_name else f"Session for Day {session_day}",  # Optional session name
             day_of_week=session_day,
             training_week_id=training_week_id
@@ -347,7 +486,8 @@ def submit_log():
             program_id=program_id,  # Save the selected program ID  # Use the retrieved or newly created exercise ID
             mesocycle_id=mesocycle.id,
             exercise_id=exercise_id,
-            session_id=session.id,  # Associate the log with the session
+            training_session_id=session.id,  # Associate the log with the session
+            training_week_id=session.training_week_id,
             load=load_value,
             sets=sets_value,
             reps=reps_csv,  # Store CSV string of reps
@@ -460,6 +600,7 @@ def get_training_weeks(program_id):
     
     # Return the total week number
     return jsonify({'total_weeks': training_weeks})
+
 
 
 if __name__ == '__main__':
