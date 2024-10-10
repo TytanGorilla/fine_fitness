@@ -85,8 +85,8 @@ dash_app.layout = html.Div([
         id='metric-dropdown',
         options=[
         {'label': 'Volume', 'value': 'volume'},
-        {'label': 'Load over Time', 'value': 'load_time'},
-        {'label': 'Reps over Time', 'value': 'reps_time'}
+        {'label': 'Load over Time', 'value': 'load'},
+        {'label': 'Reps over Time', 'value': 'reps'}
         ],
         value='volume',  # Default value
         clearable=False
@@ -99,7 +99,7 @@ dash_app.layout = html.Div([
 ### Dash Callbacks ###
 @dash_app.callback(
     Output('program-dropdown', 'options'),
-    Input('program-dropdown', 'value')  # Remove the 'url' input
+    Input('program-dropdown', 'value')
 )
 def load_programs(_):
     programs = Program.query.all()
@@ -146,7 +146,7 @@ def load_sessions(week_id):
 def load_exercises(session_id):
     if session_id is None:
         return []
-    exercises = Log.query.join(Exercise).filter(Log.session_id == session_id).all()
+    exercises = Log.query.join(Exercise).filter(Log.training_session_id == session_id).all()
 
     # Access the exercise_name via the relationship
     return [{'label': log.exercise.exercise_name, 'value': log.exercise.id} for log in exercises]
@@ -225,18 +225,67 @@ def update_graph(program_id, week_id, session_id, exercise_id, metric):
         # Group the data by Week Number and Exercise to get total volume per week per exercise
         week_summary = df.groupby(['Week Number', 'Exercise']).agg({'Volume': 'sum'}).reset_index()
         # Debugging step to verify the week summary
-    print(week_summary)
+        print(week_summary)
 
+        # Create a bar chart to display Volume by Exercise across all weeks
+        fig = px.bar(week_summary, 
+                x='Week Number', 
+                y='Volume', 
+                color='Exercise',  # Differentiate each exercise by color
+                title='Total Volume by Exercise Across All Weeks',
+                barmode='group',
+                labels={'Volume': 'Total Volume', 'Week Number': 'Week Number'})
+        return fig
 
-    # Create a bar chart to display Volume by Exercise across all weeks
-    fig = px.bar(week_summary, 
-            x='Week Number', 
-            y='Volume', 
-            color='Exercise',  # Differentiate each exercise by color
-            title='Total Volume by Exercise Across All Weeks',
-            barmode='group',
-            labels={'Volume': 'Total Volume', 'Week Number': 'Week Number'})
-    return fig
+    # Create figures based on selected metric
+    if metric == 'load':
+        # Group the data by Week Number and Exercise to get the total load per week per exercise
+        week_summary = df.groupby(['Week Number', 'Exercise']).agg({'Load': 'sum'}).reset_index()
+
+        # Debugging step to verify the week summary
+        print(week_summary)
+
+        # Create a bar chart to display Load by Exercise across all weeks
+        fig = px.bar(week_summary, 
+                x='Week Number', 
+                y='Load', 
+                color='Exercise',  # Differentiate each exercise by color
+                title='Total Load by Exercise Across All Weeks',
+                barmode='group',  # Group bars by Week and Exercise
+                labels={'Load': 'Total Load', 'Week Number': 'Week Number'})
+        return fig
+
+    if metric == 'reps':
+        # Step 1: Flatten the Reps Per Set data
+        reps_data = []
+        for log in logs:
+            for set_num, reps in enumerate(log.reps.split(','), 1):  # Enumerate over sets, starting from 1
+                reps_data.append({
+                    'Exercise': log.exercise.exercise_name,
+                    'Reps': int(reps),
+                    'Set Number': set_num,  # Track the set number
+                    'Week Number': int(log.training_week.week_number),
+                    'Session ID': log.training_session_id
+                })
+
+        # Step 2: Convert to DataFrame
+        df_reps = pd.DataFrame(reps_data)
+
+        # Step 3: Group by Week, Exercise, and Set Number
+        # Aggregate reps per set, since each set should have individual reps
+        week_summary_reps = df_reps.groupby(['Week Number', 'Exercise', 'Set Number']).agg({'Reps': 'sum'}).reset_index()
+
+        # Step 4: Create a line chart to display Reps per Set across weeks
+        fig = px.line(week_summary_reps,
+                    x='Week Number', 
+                    y='Reps', 
+                    color='Exercise',  # Differentiate each exercise by color
+                    line_group='Set Number',  # Differentiate lines by set number within each exercise
+                    title='Reps Per Set by Exercise Across All Weeks',
+                    labels={'Reps': 'Reps Per Set', 'Week Number': 'Week Number', 'Set Number': 'Set Number'},
+                    markers=True)  # Optionally add markers to see each point
+        return fig
+
 
 ### Routes ###
 
@@ -395,7 +444,6 @@ def display():
 def design():
     user_id = session['user_id']
 
-
     return render_template("design.html")
 
 
@@ -415,11 +463,10 @@ def submit_log():
     print(f"Program ID: {program_id}, Week Number: {new_week_number}")  # Debugging
 
     # Fetch relevant mesocycle pertaining to this log
-    mesocycle = MesoCycle.query.filter_by(id=program_id).first()
+    mesocycle = MesoCycle.query.filter_by(program_id=program_id).first()
     if not mesocycle:
         return "Mesocycle not found", 400
 
-    ##############################
     # Find training weeks pertaining to this mesocycle
     training_weeks = TrainingWeek.query.filter_by(meso_cycle_id=mesocycle.id).all()
     if not training_weeks:
@@ -427,11 +474,16 @@ def submit_log():
     
     base_week = next((week for week in training_weeks if week.week_number == 1), None) # Get the base week, should be present after program creation
     training_week = next((week for week in training_weeks if week.week_number == new_week_number), None)
+
     if not training_week:
         # Handle the case where no matching training week is found
         print("No matching training week found")
         # Create a new training week if new_week_number is not found in the database
-        new_training_week = TrainingWeek(week_number=new_week_number, meso_cycle_id=mesocycle.id, week_split=base_week.week_split)
+        new_training_week = TrainingWeek(
+            week_number=new_week_number, 
+            meso_cycle_id=mesocycle.id, 
+            week_split=base_week.week_split
+        )
         db.session.add(new_training_week)
         db.session.commit()
         training_week_id = new_training_week.id
@@ -439,18 +491,24 @@ def submit_log():
         training_week_id = training_week.id
 
 
-    # Check if a session for this day and week already exists
-    session = TrainingSession.query.filter_by(day_of_week=session_day, training_week_id=training_week_id).first()
+    # Check if a session for this week already exists
+    training_session = TrainingSession.query.filter_by(training_week_id=training_week_id).first()
 
     # If session doesn't exist, create a new one
-    if not session:
-        session = TrainingSession(
+    if not training_session:
+        new_training_session = TrainingSession(
             name=session_name if session_name else f"Session for Day {session_day}",  # Optional session name
             day_of_week=session_day,
             training_week_id=training_week_id
         )
-        db.session.add(session)
+        db.session.add(new_training_session)
         db.session.commit()
+            # After committing, the new session's ID is accessible
+        training_session_id = new_training_session.id
+    else:
+        # Use the existing session's ID
+        training_session_id = training_session.id
+
 
     # Loop through each exercise entry
     for i in range(len(exercise_names)):
@@ -486,8 +544,8 @@ def submit_log():
             program_id=program_id,  # Save the selected program ID  # Use the retrieved or newly created exercise ID
             mesocycle_id=mesocycle.id,
             exercise_id=exercise_id,
-            training_session_id=session.id,  # Associate the log with the session
-            training_week_id=session.training_week_id,
+            training_session_id=training_session_id,  # Associate the log with the session
+            training_week_id=training_week_id,
             load=load_value,
             sets=sets_value,
             reps=reps_csv,  # Store CSV string of reps

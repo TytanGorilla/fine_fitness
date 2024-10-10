@@ -84,6 +84,3 @@ class TrainingSession(db.Model):
     name = db.Column(db.String, nullable=False)  # Name of the session (e.g., Upper Body, Lower Body)
     day_of_week = db.Column(db.Integer, nullable=False)  # Day of the week (1 for Monday, 2 for Tuesday, etc.)
     training_week_id = db.Column(db.Integer, db.ForeignKey('training_weeks.id'), nullable=False) # Foreign key to TrainingWeek
-
-    # Relationship to Logs
-    #logs = db.relationship('Log', backref='training_session', lazy=True)
